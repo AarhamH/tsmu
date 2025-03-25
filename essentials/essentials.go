@@ -35,7 +35,7 @@ type RecordId struct {
   PageId
 }
 
-func (rid RecordId) IsRecordIdInvalid() bool {
+func (rid RecordId) IsRecordIdValid() bool {
   return rid.value != ^uint64(0)
 }
 
