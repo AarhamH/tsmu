@@ -2,8 +2,9 @@ package essentials
 
 /*
   PageId Structure
-  |-- 32-bit --|--16-bit--|--16-bit--|
-  |   FileId   | Page Num |  Extra   |
+  |FID(32b)|PN(16b)|**(16b)|
+  FID = File Identifier
+  PN = Page Number
 */
 type PageId struct {
   value uint64
@@ -27,9 +28,11 @@ func NewPageId(fileId int, page_num uint64) *PageId {
 }
 
 /*
-  PageId Structure
-  |-- 32-bit --|--16-bit--|--16-bit--|
-  |   FileId   | Page Num |  Slot Id |
+  RecordId structure
+  |FID(32b)|PN(16b)|SLOT(16b)|
+  FID = File Identifier
+  PN = Page Number
+  SLOT = Slot Identifier
 */
 type RecordId struct {
   PageId
