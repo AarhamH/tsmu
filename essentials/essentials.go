@@ -35,7 +35,7 @@ type RecordId struct {
   PageId
 }
 
-func (rid RecordId) IsRecordIdInvalid() bool {
+func (rid RecordId) IsRecordIdValid() bool {
   return rid.value != ^uint64(0)
 }
 
@@ -43,7 +43,7 @@ func (rid RecordId) GetSlotId() uint32 {
   return uint32(rid.value) & 0xffff
 }
 
-func NewRecordId(pid PageId, slot_id uint64) *RecordId {
+func NewRecordId(pid *PageId, slot_id uint64) *RecordId {
   computedValue := pid.value | slot_id
   return &RecordId{PageId: PageId{value: computedValue}}
 }
