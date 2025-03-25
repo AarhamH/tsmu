@@ -1,5 +1,10 @@
 package essentials
 
+/*
+  PageId Structure
+  |-- 32-bit --|--16-bit--|--16-bit--|
+  |   FileId   | Page Num |  Extra   |
+*/
 type PageId struct {
   value uint64
 }
@@ -17,9 +22,8 @@ func (pid PageId) GetFileId() uint32 {
 }
 
 func NewPageId(fileId int, page_num uint64) *PageId {
-  computedValue := uint64(fileId) << uint32(32) | uint64(page_num) << uint16(16)
-  p := PageId{value: computedValue}
-  return &p
+  computedValue := uint64(fileId) << uint32(32) | page_num << uint16(16)
+  return &PageId{value: computedValue}
 }
 
 /*
