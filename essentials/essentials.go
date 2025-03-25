@@ -35,6 +35,10 @@ type RecordId struct {
   PageId
 }
 
+func (rid RecordId) IsRecordIdInvalid() bool {
+  return rid.value != ^uint64(0)
+}
+
 func (rid RecordId) GetSlotId() uint32 {
   return uint32(rid.value) & 0xffff
 }
