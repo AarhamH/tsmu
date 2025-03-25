@@ -16,8 +16,8 @@ func (pid PageId) GetFileId() uint32 {
   return uint32(pid.value >> uint32(32))
 }
 
-func NewPageId(fileId int, value uint64) *PageId {
-  computedValue := uint64(fileId) << uint32(32) | uint64(value) << uint16(16)
+func NewPageId(fileId int, page_num uint64) *PageId {
+  computedValue := uint64(fileId) << uint32(32) | uint64(page_num) << uint16(16)
   p := PageId{value: computedValue}
   return &p
 }
