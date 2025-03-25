@@ -21,3 +21,22 @@ func NewPageId(fileId int, page_num uint64) *PageId {
   p := PageId{value: computedValue}
   return &p
 }
+
+/*
+  PageId Structure
+  |-- 32-bit --|--16-bit--|--16-bit--|
+  |   FileId   | Page Num |  Extra   |
+*/
+type RecordId struct {
+  PageId
+}
+
+func (rid RecordId) GetSlotId() uint32 {
+  return uint32(rid.value) & 0xffff
+}
+
+func NewRecordId(pid PageId, slot_id uint64) *RecordId {
+  computedValue := pid.value | slot_id
+  return &RecordId{PageId: PageId{value: computedValue}}
+}
+
