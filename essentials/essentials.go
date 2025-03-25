@@ -29,7 +29,7 @@ func NewPageId(fileId int, page_num uint64) *PageId {
 /*
   PageId Structure
   |-- 32-bit --|--16-bit--|--16-bit--|
-  |   FileId   | Page Num |  Extra   |
+  |   FileId   | Page Num |  Slot Id |
 */
 type RecordId struct {
   PageId
