@@ -189,5 +189,77 @@ func TestBaseFile(t *testing.T) {
     os.WriteFile(filePath, []byte(""), 0664)
     basefile.CloseFile(*file)
   }) 
+
+  t.Run(fmt.Sprintf("test: create multiple pages in serial"), func(t *testing.T) {
+    // Initialize basefile
+    basefile, file:= basefile.NewBaseFile(filePath)
+      
+    kPages := 1000
+    for i := 0; i< kPages; i++ {
+      newPageId, err := basefile.Construct()
+
+      if err != nil {
+        t.Errorf("%s", err)
+        t.Fail()
+      }
+
+      if newPageId.GetFileId() != uint32(basefile.GetFd()) {
+        t.Errorf("expecting file id: %d, got %d", basefile.GetFd(), newPageId.GetFileId())
+        t.Fail()
+      }
+
+      if newPageId.GetPageNumber() != uint32(i) {
+        t.Errorf("expecting file id: %d, got %d", i, newPageId.GetPageNumber())
+        t.Fail()
+      }
+    }
+    basefile.CloseFile(*file)
+  })
+
+  t.Run(fmt.Sprintf("test: construct, load, flush, and load"), func(t *testing.T) {
+    // Initialize basefile
+    basefile, file:= basefile.NewBaseFile(filePath)
+      
+    kPages := 1000
+    for i := 0; i< kPages; i++ {
+      newPageId, err := basefile.Construct()
+
+      if err != nil {
+        t.Errorf("error occured when constructing %s", err)
+        t.Fail()
+      }
+        
+      outputBuffer := make([]byte, essentials.PAGE_SIZE)
+      err = basefile.Load(*newPageId, outputBuffer)
+      
+      if err != nil {
+        t.Errorf("error occured when loading page %s", err)
+        t.Fail()
+      }
+
+      for j:=0; j<essentials.PAGE_SIZE/4; j++ {
+        outputBuffer[j] = byte(j) 
+      }
+
+      err = basefile.Flush(*newPageId, outputBuffer)
+      if err != nil {
+        t.Errorf("error occured when flushing page %s", err)
+        t.Fail()
+      }
+      
+      secondOutputBuffer := make([]byte, essentials.PAGE_SIZE)
+      err = basefile.Load(*newPageId, secondOutputBuffer)
+      if err != nil {
+        t.Errorf("error occured when loading page for the second time %s", err)
+        t.Fail()
+      }
+
+      for j:=0; j<essentials.PAGE_SIZE/4; j++ {
+        secondOutputBuffer[j] = outputBuffer[j] 
+      }
+    }
+    basefile.CloseFile(*file)
+  })
+
 }
 
