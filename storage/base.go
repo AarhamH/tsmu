@@ -53,9 +53,21 @@ func (b Base) Flush (pid essentials.PageId, page []byte) error {
     return fmt.Errorf("failed to read basefile: %w", err)
   }
  
+  // Ensure the page buffer has exactly PAGE_SIZE (4096) bytes
+  if len(page) < essentials.PAGE_SIZE {
+      paddedPage := make([]byte, essentials.PAGE_SIZE)
+      copy(paddedPage, page) // Copy the contents of the original page
+      page = paddedPage      // Replace the original page with the padded one
+  } else if len(page) > essentials.PAGE_SIZE {
+      return fmt.Errorf("page exceeds the maximum size of %d bytes", essentials.PAGE_SIZE)
+  }
+  
+  paddedPage := make([]byte, essentials.PAGE_SIZE)
+  copy(paddedPage, page) // Copy the contents of the original page
+
   // write PAGE_SIZE bytes into page buffer
-  writtenBytes, err := syscall.Pwrite(int(pid.GetFileId()), page, int64(pid.GetPageNumber() * essentials.PAGE_SIZE))
-  if err != nil || writtenBytes != len(page){
+  writtenBytes, err := syscall.Pwrite(int(pid.GetFileId()), paddedPage, int64(pid.GetPageNumber() * essentials.PAGE_SIZE))
+  if err != nil || writtenBytes != essentials.PAGE_SIZE{
     return fmt.Errorf("write failed or incomplete: %w", err)
   }
     
