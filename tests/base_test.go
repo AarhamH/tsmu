@@ -218,6 +218,51 @@ func TestBaseFile(t *testing.T) {
     basefile.CloseFile(*file)
   })
 
+  t.Run(fmt.Sprintf("test: construct, load, flush, and load"), func(t *testing.T) {
+    // Initialize basefile
+    basefile, file:= basefile.NewBaseFile(filePath)
+      
+    kPages := 1000
+    for i := 0; i< kPages; i++ {
+      newPageId, err := basefile.Construct()
+
+      if err != nil {
+        t.Errorf("error occured when constructing %s", err)
+        t.Fail()
+      }
+        
+      outputBuffer := make([]byte, essentials.PAGE_SIZE)
+      err = basefile.Load(*newPageId, outputBuffer)
+      
+      if err != nil {
+        t.Errorf("error occured when loading page %s", err)
+        t.Fail()
+      }
+
+      for j:=0; j<essentials.PAGE_SIZE/4; j++ {
+        outputBuffer[j] = byte(j) 
+      }
+
+      err = basefile.Flush(*newPageId, outputBuffer)
+      if err != nil {
+        t.Errorf("error occured when flushing page %s", err)
+        t.Fail()
+      }
+      
+      secondOutputBuffer := make([]byte, essentials.PAGE_SIZE)
+      err = basefile.Load(*newPageId, secondOutputBuffer)
+      if err != nil {
+        t.Errorf("error occured when loading page for the second time %s", err)
+        t.Fail()
+      }
+
+      for j:=0; j<essentials.PAGE_SIZE/4; j++ {
+        secondOutputBuffer[j] = outputBuffer[j] 
+      }
+    }
+    basefile.CloseFile(*file)
+  })
+
   t.Run(fmt.Sprintf("test: construct, load, flush, and load (multithreaded)"), func(t *testing.T) {
       // Initialize basefile
       basefile, file := basefile.NewBaseFile(filePath)
