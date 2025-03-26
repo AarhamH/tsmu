@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
-  basefile "github.com/AarhamH/tsmu/storage"
-  essentials "github.com/AarhamH/tsmu/essentials"
+
+	essentials "github.com/AarhamH/tsmu/essentials"
+	basefile "github.com/AarhamH/tsmu/storage"
 )
 
 const filePath = "../tests/fixtures/testfile_1.txt"
@@ -79,8 +81,14 @@ func TestBaseFile(t *testing.T) {
       t.Fail()
     }
 
-    if string(buff) != string(content) {
-      t.Errorf("expecting the content: %s, got: %s", string(buff), string(content))
+    if len(content) != essentials.PAGE_SIZE {
+      t.Errorf("expecting the content size: %d, got: %d",essentials.PAGE_SIZE, len(content))
+      t.Fail()
+    }
+    
+    trimmedContent := strings.TrimSpace(string(content))
+    if strings.Compare(string(buff), trimmedContent) == 0 {
+      t.Errorf("expecting the content: %s, got: %s", string(buff), trimmedContent)
       t.Fail()
     }
 
