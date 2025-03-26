@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"sync/atomic"
 	"syscall"
 
@@ -12,7 +13,8 @@ import (
 
 type Base struct {
   fd int // fd represents the file descriptor after opening a file  
-  page_count uint32 // page_count is treated as an atomic integer
+  pageCount uint32 // pageCount is treated as an atomic integer
+  baseLatch sync.Mutex 
 }
 
 func NewBaseFile(fileName string) (*Base, *os.File) {
@@ -21,22 +23,21 @@ func NewBaseFile(fileName string) (*Base, *os.File) {
     log.Fatal(err)
   }
 
-  b := Base{ fd: int(file.Fd()), page_count: 0 }
+  b := Base{ fd: int(file.Fd()), pageCount: 0 }
 
   return &b, file;
 }
 
-func (b Base) CloseFile(file os.File) {
+func (b *Base) CloseFile(file os.File) {
   if err := file.Close(); err != nil {
     log.Fatal(err)
   }
 }
 
-
 // inlines for encapsulation
 func (b *Base) GetFd() int { return b.fd }
-func (b *Base) GetPageCount() uint32 { return b.page_count }
-func (b *Base) IncrementPageCount() { atomic.AddUint32(&b.page_count, 1) }
+func (b *Base) GetPageCount() uint32 { return b.pageCount }
+func (b *Base) IncrementPageCount() { atomic.AddUint32(&b.pageCount, 1) }
 
 // Given a page id and a page buffer, write content of PAGE_SIZE to the file pointed by the page_id
 func (b *Base) Flush (pid essentials.PageId, page []byte) error {
@@ -90,7 +91,11 @@ func (b *Base) Load(pid essentials.PageId, buffer[]byte) error {
 }
 
 func (b *Base) Construct() (*essentials.PageId, error) {
-  newFileSize := essentials.PAGE_SIZE * (b.page_count + 1)
+  // treat entire code block as critical section
+  b.baseLatch.Lock()
+  defer b.baseLatch.Unlock()
+
+  newFileSize := essentials.PAGE_SIZE * (b.pageCount + 1)
   
   // tries to check if file was not adjusted, if so return error
   if err := syscall.Ftruncate(b.fd, int64(newFileSize)); err != nil {
@@ -100,7 +105,7 @@ func (b *Base) Construct() (*essentials.PageId, error) {
   b.IncrementPageCount()
 
   // build new page id
-  newPID := essentials.NewPageId(b.fd, uint64(b.page_count - 1))
+  newPID := essentials.NewPageId(b.fd, uint64(b.pageCount - 1))
 
   buff := make([]byte, essentials.PAGE_SIZE)
   if err := b.Flush(*newPID, buff); err != nil {

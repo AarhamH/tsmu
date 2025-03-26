@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	essentials "github.com/AarhamH/tsmu/essentials"
@@ -262,5 +263,64 @@ func TestBaseFile(t *testing.T) {
     basefile.CloseFile(*file)
   })
 
+  t.Run(fmt.Sprintf("test: construct, load, flush, and load (multithreaded)"), func(t *testing.T) {
+      // Initialize basefile
+      basefile, file := basefile.NewBaseFile(filePath)
+      kPages := 100
+      var wg sync.WaitGroup
+
+      outputBuffer := make([]byte, essentials.PAGE_SIZE)
+      secondOutputBuffer := make([]byte, essentials.PAGE_SIZE)
+      for i := 0; i < kPages; i++ {
+          wg.Add(1)
+          go func(pageIndex int) {
+              defer wg.Done()
+
+              newPageId, err := basefile.Construct()
+              if err != nil {
+                  t.Errorf("error occurred when constructing: %s", err)
+                  t.Fail()
+                  return
+              }
+
+              err = basefile.Load(*newPageId, outputBuffer)
+              if err != nil {
+                  t.Errorf("error occurred when loading page: %s", err)
+                  t.Fail()
+                  return
+              }
+
+              for j := 0; j < essentials.PAGE_SIZE; j++ {
+                  outputBuffer[j] = byte(j)
+              }
+
+              err = basefile.Flush(*newPageId, outputBuffer)
+              if err != nil {
+                  t.Errorf("error occurred when flushing page: %s", err)
+                  t.Fail()
+                  return
+              }
+
+              err = basefile.Load(*newPageId, secondOutputBuffer)
+              if err != nil {
+                  t.Errorf("error occurred when loading page for the second time: %s", err)
+                  t.Fail()
+                  return
+              }
+          }(i)
+
+          for j := 0; j < essentials.PAGE_SIZE; j++ {
+            if outputBuffer[j] != secondOutputBuffer[j] {
+                t.Logf("%d %d", outputBuffer[j], secondOutputBuffer[j])         
+                t.Fail()
+            }
+          }
+      }
+
+      // Wait for all goroutines to finish
+      wg.Wait()
+
+      basefile.CloseFile(*file)
+  })
 }
 
