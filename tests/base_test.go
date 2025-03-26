@@ -1,16 +1,17 @@
-package storage
+package tests
 
 import (
 	"errors"
 	"fmt"
 	"os"
 	"testing"
+  basefile "github.com/AarhamH/tsmu/storage"
 )
 
 func TestBaseFile(t *testing.T) {
   t.Run(fmt.Sprintf("test: instantiate basefile with non-existent fixtures file"), func(t *testing.T) {
     filePath := "../storage/fixtures/NON_EXISTENT.txt"
-    basefile := NewBaseFile(filePath) 
+    basefile := basefile.NewBaseFile(filePath) 
     
     if basefile == nil {
       t.Logf("basefile is nil; not instantiated properly")
@@ -26,7 +27,7 @@ func TestBaseFile(t *testing.T) {
   }) 
   t.Run(fmt.Sprintf("test: instantiate basefile with existing fixtures file"), func(t *testing.T) {
     filePath := "../storage/fixtures/testfile_1.txt"
-    basefile := NewBaseFile(filePath) 
+    basefile := basefile.NewBaseFile(filePath) 
 
     // assert that the filePath already exists
     if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
