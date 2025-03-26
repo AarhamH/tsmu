@@ -111,5 +111,33 @@ func TestBaseFile(t *testing.T) {
     // Close
     basefile.CloseFile(*file)
   }) 
+
+  t.Run(fmt.Sprintf("test: load page given valid buffer"), func(t *testing.T) {
+    // Initialize basefile
+   
+    basefile, file:= basefile.NewBaseFile(filePath)
+    inputString := strings.Repeat("A", 4096)
+    os.WriteFile(filePath, []byte(inputString), 0664)
+    
+    fd := basefile.GetFd();
+    
+    pageId := essentials.NewPageId(fd, 0)
+    outpufBuffer := make([]byte, essentials.PAGE_SIZE)
+    if err := basefile.Load(*pageId, outpufBuffer); err != nil {
+      t.Errorf("error occured when loading page: %s", err)
+      t.Fail()
+    }
+    
+    outputBuffString := strings.TrimSpace(string(outpufBuffer))
+    if strings.Compare(outputBuffString, inputString) != 0 {
+      t.Errorf("expecting output buffer: %s, got: %s", inputString, outputBuffString)
+      t.Fail()
+    }
+
+    // Close
+    os.WriteFile(filePath, []byte(""), 0664)
+    basefile.CloseFile(*file)
+    
+  }) 
 }
 
