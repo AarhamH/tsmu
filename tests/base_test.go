@@ -13,9 +13,9 @@ const filePath = "../tests/fixtures/testfile_1.txt"
 
 func TestBaseFile(t *testing.T) {
   t.Run(fmt.Sprintf("test: instantiate basefile with non-existent fixtures file"), func(t *testing.T) {
-    // Initialize basefile
-   
     newlyCreatedFilePath := "../tests/fixtures/new_file.txt"
+    
+    // Initialize basefile
     basefile, file := basefile.NewBaseFile(newlyCreatedFilePath) 
     
     if basefile == nil {
@@ -28,6 +28,7 @@ func TestBaseFile(t *testing.T) {
       t.Fail()
     }
 
+    // Close
     basefile.CloseFile(*file)
     os.Remove(newlyCreatedFilePath)
   })
@@ -53,17 +54,14 @@ func TestBaseFile(t *testing.T) {
       t.Logf("expecting fd != -1, got %d", fd)
       t.Fail()
     }
+
+    // Close
     basefile.CloseFile(*file)
   }) 
 
   t.Run(fmt.Sprintf("test: flush page to valid file"), func(t *testing.T) {
+    // Initialize basefile
     basefile,file := basefile.NewBaseFile(filePath)
-
-    // assert that the filePath has been created
-    if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
-      t.Logf("expecting file path %s to be created", filePath)
-      t.Fail()
-    }
     
     fd := basefile.GetFd();
     
@@ -73,6 +71,8 @@ func TestBaseFile(t *testing.T) {
       t.Errorf("error occured when flushing page %e", err)
       t.Fail()
     }
+    
+    // read contents of file and compare with buffer
     content, err := os.ReadFile(filePath)
     if err != nil {
       t.Errorf("error occured when reading file: %e", err)
@@ -83,10 +83,13 @@ func TestBaseFile(t *testing.T) {
       t.Errorf("expecting the content: %s, got: %s", string(buff), string(content))
       t.Fail()
     }
+
+    // Close
     basefile.CloseFile(*file)
   })
 
   t.Run(fmt.Sprintf("test: flush page given invalid buffer"), func(t *testing.T) {
+    // Initialize basefile
     basefile,file := basefile.NewBaseFile(filePath)
     
     fd := basefile.GetFd();
@@ -96,8 +99,9 @@ func TestBaseFile(t *testing.T) {
       t.Errorf("expecting error for nil page buffer")
       t.Fail()
     }
+
+    // Close
     basefile.CloseFile(*file)
-    os.Remove(filePath)
   }) 
 }
 
