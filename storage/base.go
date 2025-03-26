@@ -7,12 +7,11 @@ import (
 )
 
 type Base struct {
-  id int 
-  page_count uint32
+  fd int // fd represents the file descriptor after opening a file  
+  page_count uint32 // page_count is treated as an atomic integer
 }
 
-// can represent basefile id or file descriptor
-func (b Base) GetId() int { return b.id }
+func (b Base) GetId() int { return b.fd }
 func (b Base) GetPageCount() uint32 { return b.page_count }
 func (b Base) IncrementPageCount() { atomic.AddUint32(&b.page_count, 1) }
 
@@ -22,7 +21,7 @@ func NewBaseFile(fileName string) *Base {
     log.Fatal(err)
   }
 
-  b := Base{ id: int(file.Fd()), page_count: 0 }
+  b := Base{ fd: int(file.Fd()), page_count: 0 }
   
   err = file.Close()
   if err != nil {
