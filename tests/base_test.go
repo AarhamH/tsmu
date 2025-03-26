@@ -14,6 +14,7 @@ import (
 const filePath = "../tests/fixtures/testfile_1.txt"
 
 func TestBaseFile(t *testing.T) {
+  os.Mkdir("../tests/fixtures", os.ModePerm)
   t.Run(fmt.Sprintf("test: instantiate basefile with non-existent fixtures file"), func(t *testing.T) {
     newlyCreatedFilePath := "../tests/fixtures/new_file.txt"
     
