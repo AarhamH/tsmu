@@ -23,18 +23,19 @@ func NewBaseFile(fileName string) *Base {
 
   b := Base{ fd: int(file.Fd()), page_count: 0 }
   
-  err = file.Close()
-  if err != nil {
+  if err = file.Close(); err != nil {
     log.Fatal(err)
   }
 
   return &b;
 }
 
+// inlines for encapsulation
 func (b Base) GetFd() int { return b.fd }
 func (b Base) GetPageCount() uint32 { return b.page_count }
 func (b Base) IncrementPageCount() { atomic.AddUint32(&b.page_count, 1) }
 
+// Given a page id and a page buffer, write content of PAGE_SIZE to the file pointed by the page_id
 func (b Base) Flush (pid essentials.PageId, page []byte) error {
   // fail on invalid page id and nullptr
   if(page == nil) {
@@ -57,7 +58,7 @@ func (b Base) Flush (pid essentials.PageId, page []byte) error {
   }
     
   // final check to verify all data has been written to storage
-  if err := syscall.Fsync(b.fd); err != nil {
+  if err := syscall.Fsync(int(pid.GetFileId())); err != nil {
     return fmt.Errorf("data sync failed: %w", err)
   }
 
