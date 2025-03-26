@@ -4,24 +4,33 @@ on:
   pull_request:
     branches: 
       - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.24.1
+
       - name: Install dependencies
-        run: go get .
+        run: |
+          go mod tidy
+          go mod download
+
       - name: Test with Go
-        run:
-          cd tests  
-          go test -json > TestResults-${{ matrix.go-version }}.json
+        working-directory: ./tests
+        run: |
+          go test -json > TestResults.json
+
       - name: Upload Go test results
         uses: actions/upload-artifact@v4
         with:
-          name: Go-results-${{ matrix.go-version }}
-          path: TestResults-${{ matrix.go-version }}.jsone
+          name: Go-results
+          path: ./tests/TestResults.json
+
