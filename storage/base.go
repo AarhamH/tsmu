@@ -34,14 +34,14 @@ func (b Base) CloseFile(file os.File) {
 
 
 // inlines for encapsulation
-func (b Base) GetFd() int { return b.fd }
-func (b Base) GetPageCount() uint32 { return b.page_count }
-func (b Base) IncrementPageCount() { atomic.AddUint32(&b.page_count, 1) }
+func (b *Base) GetFd() int { return b.fd }
+func (b *Base) GetPageCount() uint32 { return b.page_count }
+func (b *Base) IncrementPageCount() { atomic.AddUint32(&b.page_count, 1) }
 
 // Given a page id and a page buffer, write content of PAGE_SIZE to the file pointed by the page_id
-func (b Base) Flush (pid essentials.PageId, page []byte) error {
+func (b *Base) Flush (pid essentials.PageId, page []byte) error {
   // check for valid parameters before flushing
-  if err := isBufferAndIdValid(pid, page, b.fd); err != nil {
+  if err := isBufferAndIdValid(pid, page, pid.GetFileId()); err != nil {
     return err
   }
 
@@ -71,9 +71,9 @@ func (b Base) Flush (pid essentials.PageId, page []byte) error {
 }
 
 // given page id and output buffer, write contents pointed to by page_id to buffer
-func (b Base) Load(pid essentials.PageId, buffer[]byte) error {
+func (b *Base) Load(pid essentials.PageId, buffer[]byte) error {
   // check for valid parameters before loading
-  if err := isBufferAndIdValid(pid, buffer, b.fd); err != nil {
+  if err := isBufferAndIdValid(pid, buffer, pid.GetFileId()); err != nil {
     return err
   }
   
@@ -89,9 +89,30 @@ func (b Base) Load(pid essentials.PageId, buffer[]byte) error {
   return nil
 }
 
+func (b *Base) Construct() (*essentials.PageId, error) {
+  newFileSize := essentials.PAGE_SIZE * (b.page_count + 1)
+  
+  // tries to check if file was not adjusted, if so return error
+  if err := syscall.Ftruncate(b.fd, int64(newFileSize)); err != nil {
+    return nil, err
+  }
+
+  b.IncrementPageCount()
+
+  // build new page id
+  newPID := essentials.NewPageId(b.fd, uint64(b.page_count - 1))
+
+  buff := make([]byte, essentials.PAGE_SIZE)
+  if err := b.Flush(*newPID, buff); err != nil {
+    fmt.Println("Error2 here")
+    return nil, err
+  }
+
+  return newPID, nil
+}
 
 // helpers
-func isBufferAndIdValid(pid essentials.PageId, page []byte, fd int) error {
+func isBufferAndIdValid(pid essentials.PageId, page []byte, fd uint32) error {
   if(page == nil) {
     return fmt.Errorf("page is nil")
   }
@@ -101,7 +122,7 @@ func isBufferAndIdValid(pid essentials.PageId, page []byte, fd int) error {
   }
 
   var fileInfo syscall.Stat_t
-  if err := syscall.Fstat(fd, &fileInfo); err != nil {
+  if err := syscall.Fstat(int(fd), &fileInfo); err != nil {
     return fmt.Errorf("failed to read basefile: %w", err)
   }
 

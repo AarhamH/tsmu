@@ -18,9 +18,9 @@ func NewPageId(fileId int, page_num uint64) *PageId {
   return &PageId{value: computedValue}
 }
 
-func (pid PageId) IsPageIdValid() bool { return pid.value != ^uint64(0) }
-func (pid PageId) GetPageNumber() uint32 { return uint32(pid.value & 0xffffffff) >> 16 }
-func (pid PageId) GetFileId() uint32 { return uint32(pid.value >> uint32(32)) }
+func (pid *PageId) IsPageIdValid() bool { return pid.value != ^uint64(0) }
+func (pid *PageId) GetPageNumber() uint32 { return uint32(pid.value & 0xffffffff) >> 16 }
+func (pid *PageId) GetFileId() uint32 { return uint32(pid.value >> uint32(32)) }
 
 
 /*
@@ -39,5 +39,5 @@ func NewRecordId(pid *PageId, slot_id uint64) *RecordId {
   return &RecordId{PageId: PageId{value: computedValue}}
 }
 
-func (rid RecordId) IsRecordIdValid() bool { return rid.value != ^uint64(0) }
-func (rid RecordId) GetSlotId() uint32 { return uint32(rid.value) & 0xffff }
+func (rid *RecordId) IsRecordIdValid() bool { return rid.value != ^uint64(0) }
+func (rid *RecordId) GetSlotId() uint32 { return uint32(rid.value) & 0xffff }
