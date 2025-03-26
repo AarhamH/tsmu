@@ -15,19 +15,21 @@ type Base struct {
   page_count uint32 // page_count is treated as an atomic integer
 }
 
-func NewBaseFile(fileName string) *Base {
+func NewBaseFile(fileName string) (*Base, *os.File) {
   file, err := os.OpenFile(fileName, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0664)
   if err != nil {
     log.Fatal(err)
   }
 
   b := Base{ fd: int(file.Fd()), page_count: 0 }
-  
-  if err = file.Close(); err != nil {
+
+  return &b, file;
+}
+
+func (b Base) CloseFile(file os.File) {
+  if err := file.Close(); err != nil {
     log.Fatal(err)
   }
-
-  return &b;
 }
 
 // inlines for encapsulation
@@ -53,7 +55,7 @@ func (b Base) Flush (pid essentials.PageId, page []byte) error {
  
   // write PAGE_SIZE bytes into page buffer
   writtenBytes, err := syscall.Pwrite(int(pid.GetFileId()), page, int64(pid.GetPageNumber() * essentials.PAGE_SIZE))
-  if err != nil || writtenBytes != essentials.PAGE_SIZE {
+  if err != nil || writtenBytes != len(page){
     return fmt.Errorf("write failed or incomplete: %w", err)
   }
     
