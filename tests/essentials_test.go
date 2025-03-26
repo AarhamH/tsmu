@@ -1,9 +1,10 @@
-package essentials
+package tests
 
 import (
 	"fmt"
 	"testing"
   "math/rand/v2"
+  essentials "github.com/AarhamH/tsmu/essentials"
 )
 
 func TestPageId(t *testing.T) {
@@ -11,7 +12,7 @@ func TestPageId(t *testing.T) {
   pageNum := rand.IntN(100)
 
   t.Run(fmt.Sprintf("test: pageId generated with random fileId and pageNum"), func(t *testing.T) {
-    pid := NewPageId(fileId, uint64(pageNum))
+    pid := essentials.NewPageId(fileId, uint64(pageNum))
     isValid := pid.IsPageIdValid() 
     if !isValid {
       t.Logf("Expected IsPageIdValid = true, got %t", isValid)
@@ -20,7 +21,7 @@ func TestPageId(t *testing.T) {
   })
 
   t.Run(fmt.Sprintf("test: pageId calculates accurate pageNum"), func(t *testing.T) {
-    pid := NewPageId(fileId, uint64(pageNum))
+    pid := essentials.NewPageId(fileId, uint64(pageNum))
     isValid := pid.IsPageIdValid() 
     if !isValid {
       t.Logf("Expected IsPageIdValid = true, got %t", isValid)
@@ -34,7 +35,7 @@ func TestPageId(t *testing.T) {
   })
 
   t.Run(fmt.Sprintf("test: pageId calculates accurate fileId"), func(t *testing.T) {
-    pid := NewPageId(fileId, uint64(pageNum))
+    pid := essentials.NewPageId(fileId, uint64(pageNum))
     isValid := pid.IsPageIdValid() 
     if !isValid {
       t.Logf("Expected IsPageIdValid = true, got %t", isValid)
@@ -53,13 +54,13 @@ func TestRecordId(t *testing.T) {
   pageNum := rand.IntN(100)
   slotId := rand.IntN(100)
   t.Run(fmt.Sprintf("test: recordId is valid"), func(t *testing.T) {
-    pid := NewPageId(fileId, uint64(pageNum))
+    pid := essentials.NewPageId(fileId, uint64(pageNum))
     isValid := pid.IsPageIdValid() 
     if !isValid {
       t.Logf("Expected IsPageIdValid = true, got %t", isValid)
       t.Fail()
     }
-    rid := NewRecordId(pid, uint64(slotId))
+    rid := essentials.NewRecordId(pid, uint64(slotId))
     isValid = rid.IsRecordIdValid()
     if !isValid {
       t.Logf("Expected IsRecordIdValid =, got %t", isValid)
@@ -68,13 +69,13 @@ func TestRecordId(t *testing.T) {
   })
 
   t.Run(fmt.Sprintf("test: recordId calculates accurate slotId"), func(t *testing.T) {
-    pid := NewPageId(fileId, uint64(pageNum))
+    pid := essentials.NewPageId(fileId, uint64(pageNum))
     isValid := pid.IsPageIdValid() 
     if !isValid {
       t.Logf("Expected IsPageIdValid = true, got %t", isValid)
       t.Fail()
     }
-    rid := NewRecordId(pid, uint64(slotId))
+    rid := essentials.NewRecordId(pid, uint64(slotId))
     isValid = rid.IsRecordIdValid()
     if !isValid {
       t.Logf("Expected IsRecordIdValid =, got %t", isValid)
