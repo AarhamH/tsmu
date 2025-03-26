@@ -89,6 +89,25 @@ func (b Base) Load(pid essentials.PageId, buffer[]byte) error {
   return nil
 }
 
+func (b Base) Construct() (*essentials.PageId, error) {
+  newFileSize := essentials.PAGE_SIZE * (b.page_count + 1)
+  
+  // tries to check if file was not adjusted, if so return error
+  if err := syscall.Ftruncate(b.fd, int64(newFileSize)); err != nil {
+    return nil, err
+  }
+
+  b.IncrementPageCount()
+
+  // build new page id
+  newPID := essentials.NewPageId(b.fd, uint64(b.page_count-1))
+  buff := make([]byte, essentials.PAGE_SIZE)
+  if err := b.Flush(*newPID, buff); err != nil {
+    return nil, err
+  }
+
+  return newPID, nil
+}
 
 // helpers
 func isBufferAndIdValid(pid essentials.PageId, page []byte, fd uint32) error {
