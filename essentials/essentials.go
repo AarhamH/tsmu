@@ -6,6 +6,9 @@ package essentials
   FID = File Identifier
   PN = Page Number
 */
+
+const PAGE_SIZE = 4096 // 4K pages
+
 type PageId struct {
   value uint64
 }
