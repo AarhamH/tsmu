@@ -9,12 +9,13 @@ import (
   essentials "github.com/AarhamH/tsmu/essentials"
 )
 
-const newlyCreatedFilePath = "../tests/fixtures/new_file.txt"
 const filePath = "../tests/fixtures/testfile_1.txt"
 
 func TestBaseFile(t *testing.T) {
   t.Run(fmt.Sprintf("test: instantiate basefile with non-existent fixtures file"), func(t *testing.T) {
     // Initialize basefile
+   
+    newlyCreatedFilePath := "../tests/fixtures/new_file.txt"
     basefile, file := basefile.NewBaseFile(newlyCreatedFilePath) 
     
     if basefile == nil {
@@ -56,11 +57,11 @@ func TestBaseFile(t *testing.T) {
   }) 
 
   t.Run(fmt.Sprintf("test: flush page to valid file"), func(t *testing.T) {
-    basefile,file := basefile.NewBaseFile(newlyCreatedFilePath)
+    basefile,file := basefile.NewBaseFile(filePath)
 
     // assert that the filePath has been created
     if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
-      t.Logf("expecting file path %s to be created", newlyCreatedFilePath)
+      t.Logf("expecting file path %s to be created", filePath)
       t.Fail()
     }
     
@@ -72,7 +73,7 @@ func TestBaseFile(t *testing.T) {
       t.Errorf("error occured when flushing page %e", err)
       t.Fail()
     }
-    content, err := os.ReadFile(newlyCreatedFilePath)
+    content, err := os.ReadFile(filePath)
     if err != nil {
       t.Errorf("error occured when reading file: %e", err)
       t.Fail()
@@ -83,7 +84,20 @@ func TestBaseFile(t *testing.T) {
       t.Fail()
     }
     basefile.CloseFile(*file)
-    os.Remove(newlyCreatedFilePath)
+  })
+
+  t.Run(fmt.Sprintf("test: flush page given invalid buffer"), func(t *testing.T) {
+    basefile,file := basefile.NewBaseFile(filePath)
+    
+    fd := basefile.GetFd();
+    
+    pageId := essentials.NewPageId(fd, 0)
+    if err := basefile.Flush(*pageId, nil); err == nil {
+      t.Errorf("expecting error for nil page buffer")
+      t.Fail()
+    }
+    basefile.CloseFile(*file)
+    os.Remove(filePath)
   }) 
 }
 
