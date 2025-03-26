@@ -111,5 +111,83 @@ func TestBaseFile(t *testing.T) {
     // Close
     basefile.CloseFile(*file)
   }) 
+
+  t.Run(fmt.Sprintf("test: load page given valid buffer"), func(t *testing.T) {
+    // Initialize basefile
+    basefile, file:= basefile.NewBaseFile(filePath)
+    inputString := strings.Repeat("A", 4096)
+    os.WriteFile(filePath, []byte(inputString), 0664)
+    
+    fd := basefile.GetFd();
+    
+    pageId := essentials.NewPageId(fd, 0)
+    outpufBuffer := make([]byte, essentials.PAGE_SIZE)
+    if err := basefile.Load(*pageId, outpufBuffer); err != nil {
+      t.Errorf("error occured when loading page: %s", err)
+      t.Fail()
+    }
+    
+    outputBuffString := strings.TrimSpace(string(outpufBuffer))
+    if strings.Compare(outputBuffString, inputString) != 0 {
+      t.Errorf("expecting output buffer: %s, got: %s", inputString, outputBuffString)
+      t.Fail()
+    }
+
+    // Close
+    os.WriteFile(filePath, []byte(""), 0664)
+    basefile.CloseFile(*file)
+    
+  }) 
+
+  t.Run(fmt.Sprintf("test: load page given invalid buffer"), func(t *testing.T) {
+    // Initialize basefile
+    basefile, file:= basefile.NewBaseFile(filePath)
+    inputString := strings.Repeat("A", 4096)
+    os.WriteFile(filePath, []byte(inputString), 0664)
+    
+    fd := basefile.GetFd();
+    
+    pageId := essentials.NewPageId(fd, 0)
+    if err := basefile.Load(*pageId, nil); err == nil {
+      t.Errorf("expecting error when loading to nil output buffer")
+      t.Fail()
+    }
+
+    // Close
+    os.WriteFile(filePath, []byte(""), 0664)
+    basefile.CloseFile(*file)
+  })
+
+  t.Run(fmt.Sprintf("test: flush page and immediately load same page"), func(t *testing.T) {
+    // Initialize basefile
+    basefile, file:= basefile.NewBaseFile(filePath)
+    fd := basefile.GetFd();
+    
+    repeatingText := strings.Repeat("A", 4096)
+    inputBuffer := []byte(repeatingText)
+    pageId := essentials.NewPageId(fd, 0)
+    outpufBuffer := make([]byte, essentials.PAGE_SIZE)
+
+    if err := basefile.Flush(*pageId, inputBuffer); err != nil {
+      t.Errorf("error occured when flushing page: %s", err)
+      t.Fail()
+    }
+
+    if err := basefile.Load(*pageId, outpufBuffer); err != nil {
+      t.Errorf("error occured when loading page: %s", err)
+      t.Fail()
+    }
+    
+    inputBuffString := string(inputBuffer)
+    outputBuffString := string(outpufBuffer)
+    if strings.Compare(outputBuffString, inputBuffString) != 0 {
+      t.Errorf("expecting output buffer: %s, got: %s", inputBuffString, outputBuffString)
+      t.Fail()
+    }
+
+    // Close
+    os.WriteFile(filePath, []byte(""), 0664)
+    basefile.CloseFile(*file)
+  }) 
 }
 
