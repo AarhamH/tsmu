@@ -11,7 +11,7 @@ type Base struct {
   page_count uint32 // page_count is treated as an atomic integer
 }
 
-func (b Base) GetId() int { return b.fd }
+func (b Base) GetFd() int { return b.fd }
 func (b Base) GetPageCount() uint32 { return b.page_count }
 func (b Base) IncrementPageCount() { atomic.AddUint32(&b.page_count, 1) }
 
